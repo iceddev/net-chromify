@@ -26,15 +26,15 @@ onload = function() {
 
     var host = url.parse(urlEl.value);
     result.innerText = "";
-  
+
     var opts = {
-      port: parseInt(host.port) || 80, 
-      host: host.hostname 
+      port: parseInt(host.port) || 80,
+      host: host.hostname
     };
 
     var client = net.createConnection(opts);
     client.setEncoding("utf8");
- 
+
     client.on("connect", function() {
        var request = "GET " + host.path + " HTTP/1.1\n" +
                      "Host: " + host.host + "\n\n";
@@ -46,5 +46,3 @@ onload = function() {
     });
   }
 };
-
-
