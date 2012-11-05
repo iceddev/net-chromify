@@ -186,18 +186,17 @@ net.Server.prototype._accept = function(acceptInfo) {
   socket._socketInfo = acceptInfo;
   self.emit("connection", socket);
 
-  var acceptCallback = (function(socket){
-    return function(acceptInfo){
-      socket._socketInfo = acceptInfo;
-      chrome.socket.read(acceptInfo.socketId, function(readInfo){
-        if(readInfo.resultCode < 0) return;
-        // ArrayBuffer to Buffer if no encoding.
-        var buffer = arrayBufferToBuffer(readInfo.data);
-        // self.emit('data', buffer);
-        if (socket.ondata) socket.ondata(buffer.parent, buffer.offset, buffer.length);
-      });
-    };
-  }(socket));
+  var acceptCallback = function(acceptInfo){
+    socket._socketInfo = acceptInfo;
+    chrome.socket.read(acceptInfo.socketId, function(readInfo){
+      if(readInfo.resultCode < 0) return;
+      // ArrayBuffer to Buffer if no encoding.
+      var buffer = arrayBufferToBuffer(readInfo.data);
+      // self.emit('data', buffer);
+      if (socket.ondata) socket.ondata(buffer.parent, buffer.offset, buffer.length);
+      chrome.socket.accept(self._serverSocket._socketInfo.socketId, acceptCallback);
+    });
+  };
 
   chrome.socket.accept(self._serverSocket._socketInfo.socketId, acceptCallback);
 };
