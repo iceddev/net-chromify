@@ -186,19 +186,9 @@ net.Server.prototype._accept = function(acceptInfo) {
   socket._socketInfo = acceptInfo;
   self.emit("connection", socket);
 
-  var acceptCallback = function(acceptInfo){
-    socket._socketInfo = acceptInfo;
-    chrome.socket.read(acceptInfo.socketId, function(readInfo){
-      if(readInfo.resultCode < 0) return;
-      // ArrayBuffer to Buffer if no encoding.
-      var buffer = arrayBufferToBuffer(readInfo.data);
-      // self.emit('data', buffer);
-      if (socket.ondata) socket.ondata(buffer.parent, buffer.offset, buffer.length);
-      chrome.socket.accept(self._serverSocket._socketInfo.socketId, acceptCallback);
-    });
-  };
+  chrome.socket.accept(self._serverSocket._socketInfo.socketId, self._accept.bind(self));
 
-  chrome.socket.accept(self._serverSocket._socketInfo.socketId, acceptCallback);
+  socket._read();
 };
 
 net.Server.prototype.close = function(callback) {
@@ -209,6 +199,10 @@ net.Server.prototype.close = function(callback) {
 net.Server.prototype.address = function() {};
 
 net.Socket = function(options) {
+  var createNew = false;
+  if(options){
+    createNew = true;
+  }
   var self = this;
   options = options || {};
   this._fd = options.fd;
@@ -219,12 +213,14 @@ net.Socket = function(options) {
   this._socketInfo = 0;
   this._encoding;
 
-  chrome.socket.create("tcp", {}, function(createInfo) {
-    self._socketInfo = createInfo;
-    self.emit("_created"); // This event doesn't exist in the API, it is here because Chrome is async
-    // start trying to read
-    self._read();
-  });
+  if(createNew){
+    chrome.socket.create("tcp", {}, function(createInfo) {
+      self._socketInfo = createInfo;
+      self.emit("_created"); // This event doesn't exist in the API, it is here because Chrome is async
+      // start trying to read
+      // self._read();
+    });
+  }
 };
 
 util.inherits(net.Socket, Stream);
@@ -283,11 +279,13 @@ net.Socket.prototype.connect = function() {
 net.Socket.prototype.destroy = function() {
   chrome.socket.disconnect(this._socketInfo.socketId);
   chrome.socket.destroy(this._socketInfo.socketId);
+  clearTimeout(this._readTimer);
 };
 net.Socket.prototype.destroySoon = function() {
   // For now :P
   chrome.socket.disconnect(this._socketInfo.socketId);
   chrome.socket.destroy(this._socketInfo.socketId);
+  clearTimeout(this._readTimer);
 };
 
 net.Socket.prototype.setEncoding = function(encoding) {
@@ -312,6 +310,7 @@ net.Socket.prototype._read = function() {
     // ArrayBuffer to Buffer if no encoding.
     var buffer = arrayBufferToBuffer(readInfo.data);
     self.emit('data', buffer);
+    if (self.ondata) self.ondata(buffer.parent, buffer.offset, buffer.parent.length);
   });
 
   // enque another read soon. TODO: Is there are better way to controll speed.
