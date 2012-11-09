@@ -310,7 +310,7 @@ net.Socket.prototype._read = function() {
     // ArrayBuffer to Buffer if no encoding.
     var buffer = arrayBufferToBuffer(readInfo.data);
     self.emit('data', buffer);
-    if (self.ondata) self.ondata(buffer.parent, buffer.offset, buffer.parent.length);
+    if (self.ondata) self.ondata(buffer.parent, buffer.offset, buffer.offset + buffer.length);
   });
 
   // enque another read soon. TODO: Is there are better way to controll speed.
