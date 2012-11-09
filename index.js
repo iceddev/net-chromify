@@ -282,9 +282,8 @@ net.Socket.prototype.destroy = function() {
   clearTimeout(this._readTimer);
 };
 net.Socket.prototype.destroySoon = function() {
-  // For now :P
+  // Blaine's solution to this stub - probably not correct impl
   chrome.socket.disconnect(this._socketInfo.socketId);
-  chrome.socket.destroy(this._socketInfo.socketId);
   clearTimeout(this._readTimer);
 };
 
