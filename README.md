@@ -1,8 +1,9 @@
-NOTE: Examples are busted if you regenerate bundles
-===================================================
+**Note:** This repo is not maintained, please use [chrome-net](https://github.com/feross/chrome-net) instead.
 
 net-chromeify
 =============
+
+**NOTE: Examples are busted if you regenerate bundles**
 
 To build into a script `browserify -r net-chromify:net`, now this will use the net namespace.
 
